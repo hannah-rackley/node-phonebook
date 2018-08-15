@@ -23,6 +23,8 @@ var readFile = function(filename) {
            printHeader(phonebook, filename);
        } else {
            console.log(err);
+           interface.question()
+           openPhonebook();
        }
    })
 }
