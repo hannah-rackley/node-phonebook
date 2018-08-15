@@ -1,13 +1,18 @@
 var readline = require('readline');
 var fs = require('fs');
 
-var filename = 'phonebook.txt';
 var phonebook = {};
 
 var interface = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
+
+var openPhonebook = function() {
+    interface.question('What phonebook would you like to open? Enter file name: ', function(answer) {
+        readFile(answer);
+    })
+}
 
 var readFile = function(filename) {
     fs.readFile(filename, function(err, contents) {
@@ -118,4 +123,4 @@ var runPhonebook = function(answer, phonebook, filename) {
     }
 }
 
-readFile(filename);
+openPhonebook();
