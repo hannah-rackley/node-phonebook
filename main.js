@@ -53,7 +53,16 @@ var server = http.createServer(function(req, res) {
                 newContact.id = id;
                 contacts[id] = newContact;
                 fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
-                    res.end(`${JSON.stringify(newContact)} has been created.`); 
+                    res.end(`${JSON.stringify(contacts[newContact]["name"])} has been created.`); 
+                })
+            })
+        } else if (req.url.startsWith('/phonebook/') && req.method === "PUT") {
+            readBody(req, function(body) {
+                var currentContact = contact;
+                var contactUpdates = JSON.parse(body);
+                contacts[currentContact] = contactUpdates;
+                fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
+                    res.end(`${(JSON.stringify(contacts[currentContact]["name"]))} has been updated.`); 
                 })
             })
         } 
