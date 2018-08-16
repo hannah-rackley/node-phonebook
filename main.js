@@ -7,6 +7,16 @@ var phonebook = {};
 var generateRandom = function() {
     return Math.floor(Math.random() * 10000000 + 1);
 }
+
+var readBody = function(req, callback) {
+    var body="";
+    req.on('data', function(chunk) {
+        body += chunk.toString();
+    });
+    req.on('end', function() {
+        callback(body);
+    })
+}
     
 var interface = readline.createInterface({
     input: process.stdin,
@@ -17,19 +27,17 @@ var interface = readline.createInterface({
 var server = http.createServer(function(req, res) {
     fs.readFile('phonebook.txt', 'utf8', function(err, data) {
         var contacts = JSON.parse(data);
+        var urlArray = req.url.split('/');
+        var contact = urlArray.pop();
         if (req.url === "/phonebook" && req.method === "GET") {
             res.end(data);
         } else if (req.url.startsWith('/phonebook/') && req.method === "GET") {
-            var urlArray = req.url.split('/');
-            var contact = urlArray.pop();
             if (contacts[contact]) {
                 res.end(JSON.stringify(contacts[contact]));
             } else {
                 res.end('No contact with that name.');
             }
         } else if (req.url.startsWith('/phonebook/') && req.method === "DELETE") {
-            var urlArray = req.url.split('/');
-            var contact = urlArray.pop();
             delete contacts[contact];
             fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
                 if (!err) {
@@ -37,6 +45,16 @@ var server = http.createServer(function(req, res) {
                 } else {
                     res.end("No contact with that name");
                 }
+            })
+        } else if (req.url.startsWith('/phonebook') && req.method === "POST") {
+            readBody(req, function(body) {
+                var newContact = JSON.parse(body);
+                var id = generateRandom();
+                newContact.id = id;
+                contacts[id] = newContact;
+                fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
+                    res.end(`${JSON.stringify(newContact)} has been created.`); 
+                })
             })
         } 
     })
