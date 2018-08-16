@@ -4,6 +4,10 @@ var http = require('http');
 
 var phonebook = {};
 
+var generateRandom = function() {
+    return Math.floor(Math.random() * 10000000 + 1);
+}
+    
 var interface = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -11,47 +15,31 @@ var interface = readline.createInterface({
 
 //Everything inside of this function will be run anytime someone connects to your server
 var server = http.createServer(function(req, res) {
-    if (req.url === "/phonebook" && req.method === "GET") {
-        fs.readFile('phonebook.txt', 'utf8', function(err, data) {
-            if (!err) {
-                res.end(data);
-            } else {
-                res.end('No phonebook found');
-            }
-        })
-    } else if (req.url.startsWith('/phonebook/') && req.method === "GET") {
-        fs.readFile('phonebook.txt', 'utf8', function(err, data) {
+    fs.readFile('phonebook.txt', 'utf8', function(err, data) {
+        var contacts = JSON.parse(data);
+        if (req.url === "/phonebook" && req.method === "GET") {
+            res.end(data);
+        } else if (req.url.startsWith('/phonebook/') && req.method === "GET") {
             var urlArray = req.url.split('/');
             var contact = urlArray.pop();
-            if (!err) {
-                var contacts = JSON.parse(data);
-                Object.keys(contacts).forEach(function(key) {
-                    if (key === contact) {
-                        res.end(JSON.stringify(contacts[contact]));
-                    }
-                })
-                res.end('No contact with that name.');
+            if (contacts[contact]) {
+                res.end(JSON.stringify(contacts[contact]));
             } else {
-                res.end(err);
+                res.end('No contact with that name.');
             }
-        })
-    } else if (req.url.startsWith('/phonebook/') && req.method === "DELETE") {
-        fs.readFile('phonebook.txt', 'utf8', function(err, data) {
+        } else if (req.url.startsWith('/phonebook/') && req.method === "DELETE") {
             var urlArray = req.url.split('/');
             var contact = urlArray.pop();
-            if (!err) {
-                var contacts = JSON.parse(data);
-                Object.keys(contacts).forEach(function(key) {
-                    if (key === contact) {
-                        res.end(`${contact} has been deleted.`);
-                    }
-                })
-                res.end('No contact with that name.');
-            } else {
-                res.end(err);
-            }
-        })
-    } 
+            delete contacts[contact];
+            fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
+                if (!err) {
+                    res.end(`${contact} has been deleted.`);
+                } else {
+                    res.end("No contact with that name");
+                }
+            })
+        } 
+    })
 })
 
 server.listen(3102);
@@ -66,12 +54,10 @@ var readFile = function(filename) {
     fs.readFile(filename, function(err, contents) {
        if (!err) {
            var stringContents = contents.toString();
-           var object = JSON.parse(stringContents);
-           phonebook = object;
+           phonebook = JSON.parse(stringContents);
            printHeader(phonebook, filename);
        } else {
            console.log(err);
-           interface.question()
            openPhonebook();
        }
    })
@@ -109,25 +95,28 @@ var lookupEntry = function(phonebook, filename) {
 }
 
 var setEntry = function(phonebook, filename) {
-    interface.question('Name: ', function(name) {
+    interface.question('Name: ', function(person) {
         interface.question('Phone Number: ', function(number) {
-            phonebook[name] = number;
-            console.log(`Entry stored for ${name}`)
+            var id = generateRandom();
+            var contact = {"name": person, "Phone Number": number, "id": id}
+            phonebook[id] = contact;
+            console.log(`Entry stored for ${person}`)
             printHeader(phonebook, filename);
         })
     })
 }
 
 var deleteEntry = function(phonebook, filename) {
-    interface.question('Name: ', function(name) {
-        if (phonebook[name]) {
-            delete phonebook[name];
-            console.log(`Deleted entry for ${name}`)
-            console.log(phonebook)
-        } else {
-            console.log(`There is no one by that name in the phonebook.\n ${JSON.stringify(phonebook)}`);
-        }
+    interface.question('Name: ', function(person) {
+        var keys = Object.keys(phonebook);
+        keys.forEach(function(key) {
+            if (phonebook[key]["name"] === person) {
+                delete phonebook[key];
+                console.log(`Deleted entry for ${person}`)
+            }
+        })
         printHeader(phonebook, filename);
+        // console.log(`There is no one by that name in the phonebook.\n ${JSON.stringify(phonebook)}`);
     })
 }
 
