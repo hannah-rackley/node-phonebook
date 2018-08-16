@@ -1,5 +1,6 @@
 var readline = require('readline');
 var fs = require('fs');
+var http = require('http');
 
 var phonebook = {};
 
@@ -7,6 +8,53 @@ var interface = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
+
+//Everything inside of this function will be run anytime someone connects to your server
+var server = http.createServer(function(req, res) {
+    if (req.url === "/phonebook" && req.method === "GET") {
+        fs.readFile('phonebook.txt', 'utf8', function(err, data) {
+            if (!err) {
+                res.end(data);
+            } else {
+                res.end('No phonebook found');
+            }
+        })
+    } else if (req.url.startsWith('/phonebook/') && req.method === "GET") {
+        fs.readFile('phonebook.txt', 'utf8', function(err, data) {
+            var urlArray = req.url.split('/');
+            var contact = urlArray.pop();
+            if (!err) {
+                var contacts = JSON.parse(data);
+                Object.keys(contacts).forEach(function(key) {
+                    if (key === contact) {
+                        res.end(JSON.stringify(contacts[contact]));
+                    }
+                })
+                res.end('No contact with that name.');
+            } else {
+                res.end(err);
+            }
+        })
+    } else if (req.url.startsWith('/phonebook/') && req.method === "DELETE") {
+        fs.readFile('phonebook.txt', 'utf8', function(err, data) {
+            var urlArray = req.url.split('/');
+            var contact = urlArray.pop();
+            if (!err) {
+                var contacts = JSON.parse(data);
+                Object.keys(contacts).forEach(function(key) {
+                    if (key === contact) {
+                        res.end(`${contact} has been deleted.`);
+                    }
+                })
+                res.end('No contact with that name.');
+            } else {
+                res.end(err);
+            }
+        })
+    } 
+})
+
+server.listen(3102);
 
 var openPhonebook = function() {
     interface.question('What phonebook would you like to open? Enter file name: ', function(answer) {
