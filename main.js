@@ -1,34 +1,32 @@
-var readline = require('readline');
-var fs = require('fs');
-var http = require('http');
+const readline = require('readline');
+const fs = require('fs');
+const http = require('http');
 
-var phonebook = {};
+let phonebook = {};
 
-var generateRandom = function() {
-    return Math.floor(Math.random() * 10000000 + 1);
-}
+let generateRandom = () => Math.floor(Math.random() * 10000000 + 1);
 
-var readBody = function(req, callback) {
-    var body="";
-    req.on('data', function(chunk) {
+let readBody = (req, callback) => {
+    let body="";
+    req.on('data', (chunk) => {
         body += chunk.toString();
     });
-    req.on('end', function() {
+    req.on('end', () => {
         callback(body);
     })
 }
     
-var interface = readline.createInterface({
+let interface = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
 
 //Everything inside of this function will be run anytime someone connects to your server
-var server = http.createServer(function(req, res) {
-    fs.readFile('phonebook.txt', 'utf8', function(err, data) {
-        var contacts = JSON.parse(data);
-        var urlArray = req.url.split('/');
-        var contact = urlArray.pop();
+let server = http.createServer((req, res) => {
+    fs.readFile('phonebook.txt', 'utf8', (err, data) => {
+        let contacts = JSON.parse(data);
+        let urlArray = req.url.split('/');
+        let contact = urlArray.pop();
         if (req.url === "/phonebook" && req.method === "GET") {
             res.end(data);
         } else if (req.url.startsWith('/phonebook/') && req.method === "GET") {
@@ -39,7 +37,7 @@ var server = http.createServer(function(req, res) {
             }
         } else if (req.url.startsWith('/phonebook/') && req.method === "DELETE") {
             delete contacts[contact];
-            fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
+            fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', (err) => {
                 if (!err) {
                     res.end(`${contact} has been deleted.`);
                 } else {
@@ -47,21 +45,21 @@ var server = http.createServer(function(req, res) {
                 }
             })
         } else if (req.url.startsWith('/phonebook') && req.method === "POST") {
-            readBody(req, function(body) {
-                var newContact = JSON.parse(body);
-                var id = generateRandom();
+            readBody(req, (body) => {
+                let newContact = JSON.parse(body);
+                let id = generateRandom();
                 newContact.id = id;
                 contacts[id] = newContact;
-                fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
-                    res.end(`${JSON.stringify(contacts[newContact]["name"])} has been created.`); 
+                fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', (err) => {
+                    res.end(`${JSON.stringify(contacts[newContact])} has been created.`); 
                 })
             })
         } else if (req.url.startsWith('/phonebook/') && req.method === "PUT") {
-            readBody(req, function(body) {
-                var currentContact = contact;
-                var contactUpdates = JSON.parse(body);
+            readBody(req, (body) => {
+                let currentContact = contact;
+                let contactUpdates = JSON.parse(body);
                 contacts[currentContact] = contactUpdates;
-                fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', function(err) {
+                fs.writeFile('phonebook.txt', JSON.stringify(contacts), 'utf8', (err) => {
                     res.end(`${(JSON.stringify(contacts[currentContact]["name"]))} has been updated.`); 
                 })
             })
@@ -71,16 +69,16 @@ var server = http.createServer(function(req, res) {
 
 server.listen(3102);
 
-var openPhonebook = function() {
-    interface.question('What phonebook would you like to open? Enter file name: ', function(answer) {
+let openPhonebook = () => {
+    interface.question('What phonebook would you like to open? Enter file name: ', (answer) => {
         readFile(answer);
     })
 }
 
-var readFile = function(filename) {
-    fs.readFile(filename, function(err, contents) {
+let readFile = (filename) => {
+    fs.readFile(filename, (err, contents) => {
        if (!err) {
-           var stringContents = contents.toString();
+           let stringContents = contents.toString();
            phonebook = JSON.parse(stringContents);
            printHeader(phonebook, filename);
        } else {
@@ -90,14 +88,14 @@ var readFile = function(filename) {
    })
 }
 
-var create = function(phonebook, filename) {
-    interface.question('What do you want to do (1-5)?' + '\n', (function(answer) {
+let create = (phonebook, filename) => {
+    interface.question('What do you want to do (1-5)?' + '\n', ((answer) => {
         runPhonebook(answer, phonebook, filename);
     }))
 }
 
-var printHeader = function (phonebook, filename) {
-    var menuArray = 
+let printHeader = (phonebook, filename) => {
+    let menuArray = 
     ['Electronic Phone Book',
         '=====================',
         '1. Look up an entry',
@@ -109,10 +107,10 @@ var printHeader = function (phonebook, filename) {
     create(phonebook, filename);
 };
 
-var lookupEntry = function(phonebook, filename) {
-    interface.question('Name: ', function(answer) {
-        var keys = Object.keys(phonebook);
-        keys.forEach(function(key) {
+let lookupEntry = (phonebook, filename) => {
+    interface.question('Name: ', (answer) => {
+        let keys = Object.keys(phonebook);
+        keys.forEach((key) => {
             if (answer == key) {
                 console.log(`Found entry for ${answer}: ${phonebook[answer]}`);
             }
@@ -121,11 +119,11 @@ var lookupEntry = function(phonebook, filename) {
     })
 }
 
-var setEntry = function(phonebook, filename) {
-    interface.question('Name: ', function(person) {
-        interface.question('Phone Number: ', function(number) {
-            var id = generateRandom();
-            var contact = {"name": person, "Phone Number": number, "id": id}
+let setEntry = (phonebook, filename) => {
+    interface.question('Name: ', (person) => {
+        interface.question('Phone Number: ', (number) => {
+            let id = generateRandom();
+            let contact = {"name": person, "Phone Number": number, "id": id}
             phonebook[id] = contact;
             console.log(`Entry stored for ${person}`)
             printHeader(phonebook, filename);
@@ -133,10 +131,10 @@ var setEntry = function(phonebook, filename) {
     })
 }
 
-var deleteEntry = function(phonebook, filename) {
-    interface.question('Name: ', function(person) {
-        var keys = Object.keys(phonebook);
-        keys.forEach(function(key) {
+let deleteEntry = (phonebook, filename) => {
+    interface.question('Name: ', (person) => {
+        let keys = Object.keys(phonebook);
+        keys.forEach((key) => {
             if (phonebook[key]["name"] === person) {
                 delete phonebook[key];
                 console.log(`Deleted entry for ${person}`)
@@ -147,14 +145,14 @@ var deleteEntry = function(phonebook, filename) {
     })
 }
 
-var listAllEntries = function(phonebook, filename) {
+let listAllEntries = (phonebook, filename) => {
     console.log(phonebook);
     printHeader(phonebook, filename);
 }
 
-var writeFile = function(phonebook, filename) {
-    var writePhonebook = JSON.stringify(phonebook);
-    fs.writeFile(filename, writePhonebook, 'utf8', function(err) {
+let writeFile = (phonebook, filename) => {
+    let writePhonebook = JSON.stringify(phonebook);
+    fs.writeFile(filename, writePhonebook, 'utf8', (err) => {
        if (!err) {
             console.log("Made changes to the phonebook!\nGoodbye :)");
             interface.close();
@@ -165,8 +163,8 @@ var writeFile = function(phonebook, filename) {
 }
 
 //Get rid of if/else statements and replace with a menu object
-var runPhonebook = function(answer, phonebook, filename) {
-    // var menu = {
+let runPhonebook = (answer, phonebook, filename) => {
+    // let menu = {
     //     "1": lookupEntry(phonebook, filename), 
     //     "2": setEntry(phonebook, filename),
     //     "3": deleteEntry(phonebook, filename),
