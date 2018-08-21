@@ -44,7 +44,10 @@ let addContact = (req, res, data, matches) => {
 
 let updateContact = (req, res, data, matches) => {
     readBody(req, (body) => {
+        console.log('at update');
         let currentContact = matches[0];
+        console.log(currentContact);
+        console.log('matches');
         let contactUpdates = JSON.parse(body);
         data[currentContact] = contactUpdates;
         fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
@@ -60,27 +63,27 @@ let notFound = (req, res) => {
 let routes = [
     {
         method: 'GET',
-        url: /^\/phonebook\/([0-9]+)$/,
+        url: /^\/contacts\/([0-9]+)$/,
         run: getContact
     },
     {
         method: 'DELETE',
-        url: /^\/phonebook\/([0-9]+)$/,
+        url: /^\/contacts\/([0-9]+)$/,
         run: deleteContact
     },
     {
         method: 'PUT',
-        url: /^\/phonebook\/([0-9]+)$/,
+        url: /^\/contacts\/([0-9]+)$/,
         run: updateContact
     },
     {
         method: 'GET',
-        url: /^\/phonebook\/?$/,
+        url: /^\/contacts\/?$/,
         run: getPhonebook
     },
     {
         method: 'POST',
-        url: /^\/phonebook\/?$/,
+        url: /^\/contacts\/?$/,
         run: addContact
     },
     {
@@ -92,14 +95,21 @@ let routes = [
 
 //Everything inside of this function will be run anytime someone connects to your server
 let server = http.createServer((req, res) => {
-    fs.readFile('phonebook.txt', 'utf8', (err, data) => {
-        for (route of routes) {
-            if (route.url.test(req.url) && route.method === req.method) {
-                let matches = route.url.exec(req.url);
-                let contacts = JSON.parse(data);
-                route.run(req, res, contacts, matches.slice(1));
-                break
-            }
+    let file = "Phonebook_Frontend/" + req.url.slice(1);
+    fs.readFile(file, 'utf8', (err, data) => {
+        if (err) {
+            fs.readFile('phonebook.txt', 'utf8', (err, data) => {
+                for (route of routes) {
+                    if (route.url.test(req.url) && route.method === req.method) {
+                        let matches = route.url.exec(req.url);
+                        let contacts = JSON.parse(data);
+                        route.run(req, res, contacts, matches.slice(1));
+                        break
+                    }
+                }
+            })
+        } else {
+            res.end(data);
         }
     })
 })
