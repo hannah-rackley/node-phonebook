@@ -17,11 +17,14 @@ let renderContact = contact => {
 
 let removeContact = async (contact, row) => {
   await fetch(`/contacts/${contact.id}`, { method: 'DELETE' });
+  console.log(contact.id);
   container.removeChild(row);
 };
 
 (async () => {
-  let contacts = await(await fetch('/contacts')).json();
+  let contactObject = await(await fetch('/contacts')).json();
+  let contacts = Object.values(contactObject);
+  console.log(contacts);
   let contactRows = contacts.map(contact => renderContact(contact));
   for (let row of contactRows) {
     container.appendChild(row);
