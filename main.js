@@ -23,8 +23,8 @@ let getContact = (req, res, matches) => {
 let deleteContact = (req, res, matches) => {
     let id = matches[0];
     db.one(`DELETE from contacts WHERE id=${id}`)
-    .then(res.end('Contact has been deleted'))
     .catch(err => console.log(err));
+    res.end('Contact has been deleted');
 }
 
 let readBody = (req, callback) => {
