@@ -1,5 +1,4 @@
 const fs = require('fs');
-// const http = require('http');
 const pg = require('pg-promise')();
 const dbConfig = 'postgres://hannahglasser@localhost:5432/phonebook';
 const db = pg(dbConfig);
@@ -74,68 +73,13 @@ let updateContact = (req, res) => {
     })
 }
 
-// let notFound = (req, res) => {
-//     res.end('404 Not Found');
-// }
-
-// let routes = [
-//     {
-//         method: 'GET',
-//         url: /^\/contacts\/([0-9]+)$/,
-//         run: getContact
-//     },
-//     {
-//         method: 'DELETE',
-//         url: /^\/contacts\/([0-9]+)$/,
-//         run: deleteContact
-//     },
-//     {
-//         method: 'PUT',
-//         url: /^\/contacts\/([0-9]+)$/,
-//         run: updateContact
-//     },
-//     {
-//         method: 'GET',
-//         url: /^\/contacts\/?$/,
-//         run: getPhonebook
-//     },
-//     {
-//         method: 'POST',
-//         url: /^\/contacts\/?$/,
-//         run: addContact
-//     },
-//     {
-//         method: 'GET',
-//         url: /^.*$/,
-//         run: notFound
-//     }
-// ]
-
-//Everything inside of this function will be run anytime someone connects to your server
-// let server = http.createServer((req, res) => {
-//     let file = "Phonebook_Frontend/" + req.url.slice(1);
-//     fs.readFile(file, 'utf8', (err, data) => {
-//         if (err) {
-//             for (route of routes) {
-//                 if (route.url.test(req.url) && route.method === req.method) {
-//                     let matches = route.url.exec(req.url);
-//                     route.run(req, res, matches.slice(1));
-//                     break
-//                 }
-//             }
-//         } else {
-//             res.end(data);
-//         }
-//     })
-// })
-
 let server = express();
 
-server.get('/', getHomepage)
-server.get('/contacts', getPhonebook)
 server.get('/contacts/:id', getContact)
-server.post('/contacts', addContact)
 server.delete('/contacts/:id', deleteContact)
 server.put('/contacts/:id', updateContact)
+server.get('/contacts', getPhonebook)
+server.post('/contacts', addContact)
+server.get('/*', getHomepage)
 
 server.listen(3102);
