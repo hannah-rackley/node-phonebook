@@ -1,0 +1,23 @@
+{
+  "name": "jsPhonebook.js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hglasser/node-phonebook.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hglasser/node-phonebook/issues"
+  },
+  "homepage": "https://github.com/hglasser/node-phonebook#readme",
+  "dependencies": {
+    "pg-promise": "^8.4.6"
+  }
+}
