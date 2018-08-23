@@ -25,9 +25,6 @@ let deleteContact = (req, res, matches) => {
     db.one(`DELETE from contacts WHERE id=${id}`)
     .then(res.end('Contact has been deleted'))
     .catch(err => console.log(err));
-    // fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
-    //     res.end(`Contact has been deleted.`);
-    // })
 }
 
 let readBody = (req, callback) => {
@@ -47,9 +44,6 @@ let addContact = (req, res, matches) => {
         ('${newContact.name}', '${newContact.number}');`)
         .then(res.end('Contact has been created.'))
         .catch(err => console.log(err));
-        // fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
-        //     res.end(`New contact has been created.`); 
-        // })
     })
 }
 
@@ -68,9 +62,7 @@ let updateContact = (req, res, matches) => {
         catch (error) {
             res.end('You did not enter the appropriate information');
         }
-        // fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
-        //     res.end(`${(JSON.stringify(data[currentContact]["name"]))} has been updated.`); 
-        // })
+
     })
 }
 
@@ -116,26 +108,11 @@ let server = http.createServer((req, res) => {
     let file = "Phonebook_Frontend/" + req.url.slice(1);
     fs.readFile(file, 'utf8', (err, data) => {
         if (err) {
-            //fs.readFile('phonebook.txt', 'utf8', (err, data) => {
             for (route of routes) {
                 if (route.url.test(req.url) && route.method === req.method) {
                     let matches = route.url.exec(req.url);
                     route.run(req, res, matches.slice(1));
                     break
-                    // let contacts = JSON.parse(data);
-                    // getContacts()
-                    //     .then(results => {
-                    //         let contacts = {};
-                    //         results.forEach(contact => {
-                    //         contacts[contact.id] = contact;
-                    //         })
-                    //         return contacts;
-                    //     })
-                    //     .then(contacts => {
-                    //         route.run(req, res, matches.slice(1));
-                    //     })
-                    //     .catch()
-                    //     break
                 }
             }
         } else {
