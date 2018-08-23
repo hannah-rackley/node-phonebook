@@ -1,23 +1,33 @@
 const fs = require('fs');
 const http = require('http');
+const pg = require('pg-promise')();
+const dbConfig = 'postgres://hannahglasser@localhost:5432/phonebook';
+const db = pg(dbConfig);
 
-let generateRandom = () => Math.floor(Math.random() * 10000000 + 1);
-
-let getPhonebook = (req, res, data, matches) => {
-    res.end(JSON.stringify(data));
+let getPhonebook = (req, res, matches) => {
+    db.query('select * from contacts;')
+    .then(results => {res.end(JSON.stringify(results))})
+    .catch(err => console.log(err));
 }
 
-let getContact = (req, res, data, matches) => {
+let getContact = (req, res, matches) => {
     let id = matches[0];
-    res.end(JSON.stringify(data[id]));
-}
-
-let deleteContact = (req, res, data, matches) => {
-    let id = matches[0];
-    delete data[id];
-    fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
-        res.end(`Contact has been deleted.`);
+    db.one(`select * from contacts where contacts.id = ${id}`)
+    .then(result => {res.end(JSON.stringify(result))})
+    .catch(err => {
+        res.end('There is no contact with that id');
+        console.log(err);
     })
+}
+
+let deleteContact = (req, res, matches) => {
+    let id = matches[0];
+    db.one(`DELETE from contacts WHERE id=${id}`)
+    .then(res.end('Contact has been deleted'))
+    .catch(err => console.log(err));
+    // fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
+    //     res.end(`Contact has been deleted.`);
+    // })
 }
 
 let readBody = (req, callback) => {
@@ -30,29 +40,37 @@ let readBody = (req, callback) => {
     })
 }
 
-let addContact = (req, res, data, matches) => {
+let addContact = (req, res, matches) => {
     readBody(req, (body) => {
         let newContact = JSON.parse(body);
-        let id = generateRandom();
-        newContact.id = id;
-        data[id] = newContact;
-        fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
-            res.end(`New contact has been created.`); 
-        })
+        db.query(`INSERT INTO contacts(name, number) VALUES
+        ('${newContact.name}', '${newContact.number}');`)
+        .then(res.end('Contact has been created.'))
+        .catch(err => console.log(err));
+        // fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
+        //     res.end(`New contact has been created.`); 
+        // })
     })
 }
 
-let updateContact = (req, res, data, matches) => {
+let updateContact = (req, res, matches) => {
     readBody(req, (body) => {
-        console.log('at update');
-        let currentContact = matches[0];
-        console.log(currentContact);
-        console.log('matches');
-        let contactUpdates = JSON.parse(body);
-        data[currentContact] = contactUpdates;
-        fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
-            res.end(`${(JSON.stringify(data[currentContact]["name"]))} has been updated.`); 
-        })
+        let id = matches[0];
+        try {
+            (JSON.parse(body))
+            let contactUpdates = JSON.parse(body);
+            db.query(`update contacts set name = '${contactUpdates.name}', number = '${contactUpdates.number}'
+            where id=${id}`)
+            .then(res.end('Contact has been updated'))
+            .catch(err => {
+                console.log(err)});
+        }
+        catch (error) {
+            res.end('You did not enter the appropriate information');
+        }
+        // fs.writeFile('phonebook.txt', JSON.stringify(data), 'utf8', (err) => {
+        //     res.end(`${(JSON.stringify(data[currentContact]["name"]))} has been updated.`); 
+        // })
     })
 }
 
@@ -98,16 +116,28 @@ let server = http.createServer((req, res) => {
     let file = "Phonebook_Frontend/" + req.url.slice(1);
     fs.readFile(file, 'utf8', (err, data) => {
         if (err) {
-            fs.readFile('phonebook.txt', 'utf8', (err, data) => {
-                for (route of routes) {
-                    if (route.url.test(req.url) && route.method === req.method) {
-                        let matches = route.url.exec(req.url);
-                        let contacts = JSON.parse(data);
-                        route.run(req, res, contacts, matches.slice(1));
-                        break
-                    }
+            //fs.readFile('phonebook.txt', 'utf8', (err, data) => {
+            for (route of routes) {
+                if (route.url.test(req.url) && route.method === req.method) {
+                    let matches = route.url.exec(req.url);
+                    route.run(req, res, matches.slice(1));
+                    break
+                    // let contacts = JSON.parse(data);
+                    // getContacts()
+                    //     .then(results => {
+                    //         let contacts = {};
+                    //         results.forEach(contact => {
+                    //         contacts[contact.id] = contact;
+                    //         })
+                    //         return contacts;
+                    //     })
+                    //     .then(contacts => {
+                    //         route.run(req, res, matches.slice(1));
+                    //     })
+                    //     .catch()
+                    //     break
                 }
-            })
+            }
         } else {
             res.end(data);
         }
