@@ -73,6 +73,10 @@ let updateContact = (req, res) => {
     })
 }
 
+// let notFound = (req, res) => {
+//     res.end('404 Not Found');
+// }
+
 let server = express();
 
 server.get('/contacts/:id', getContact)
@@ -81,5 +85,6 @@ server.put('/contacts/:id', updateContact)
 server.get('/contacts', getPhonebook)
 server.post('/contacts', addContact)
 server.get('/*', getHomepage)
+// server.get('*', notFound)
 
 server.listen(3102);
